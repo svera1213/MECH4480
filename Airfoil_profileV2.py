@@ -8,7 +8,7 @@ This is a temporary script file.
 from math import *
 import numpy as np
 import matplotlib.pyplot as plt
-from temp import strength_vortex
+from Vortex_Calculator import strength_vortex
 
 def NACA(code,N):
     
@@ -62,7 +62,7 @@ def NACA(code,N):
     
     for x in X:
         
-        yt = (m/0.2) * (a0*x**0.5 + a1*x + a2*x**2 + a3*x**3 +a4*x**4)
+        yt = (xx/0.2) * (a0*x**0.5 + a1*x + a2*x**2 + a3*x**3 +a4*x**4)
         Yt.append(yt)
         
         if x < p:
@@ -173,7 +173,7 @@ def NACA(code,N):
 
 def test_run():
     
-    a, b, c, d, e, f=NACA(4412,51)
+    a, b, c, d, e, f = NACA(4412, 51)
     
     x_v1,y_v1 = a
     x_v2,y_v2 = b
@@ -188,6 +188,7 @@ def test_run():
     y_point= y_c1+y_c2
     uinf= 30.0
     alpha_v = gra1 +gra2
+#    print(alpha_v)
     
     
     return strength_vortex(x_vortex, y_vortex, x_point, y_point, uinf, alpha_v), x_vortex, y_vortex, x_point, y_point
