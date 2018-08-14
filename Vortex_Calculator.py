@@ -29,13 +29,15 @@ def vector_vel(x_A,y_A,x_vortex,y_vortex,uinf,alpha):
     Returns a vector Vn of the linear combination of the vector U and vector V as Vn=-U*sin(alpha)+V*cos(alpha) where alpha is the gradient at the constraint point
     """
     V_A =[]
-    #V_A.append(-uinf*m.sin(alpha))
+
     for i in range(len(x_vortex)):
         
         r = (x_A-x_vortex[i])**2 + (y_A-y_vortex[i])**2
         
         V_A.append( -1 * u_vel(r,y_A,y_vortex[i]) * m.sin(alpha) + v_vel(r,x_A,x_vortex[i]) * m.cos(alpha) )
-    
+        
+#    V_A.append(0)
+        
     return V_A
 
 def uinf_v(uinf, alpha_v):
@@ -45,6 +47,7 @@ def uinf_v(uinf, alpha_v):
     U_inf=[]
     for i in range(len(alpha_v)):
         U_inf.append(uinf*m.sin(alpha_v[i]))
+#    U_inf.append(0)
 #    print(U_inf)
     return U_inf
 
@@ -57,7 +60,14 @@ def matrix_vel(x_vortex, y_vortex, x_point, y_point, uinf, alpha_v):
     
     for i in range(len(x_vortex)):
         V_N.append(vector_vel(x_point[i], y_point[i], x_vortex, y_vortex , uinf, alpha_v[i]))
-#    print(V_N)
+    
+#    kutta_v=[1]
+#    for i in range(2,len(V_N[0])):
+#        kutta_v.append(0)
+#    kutta_v.append(1)
+#    V_N.append(kutta_v)
+    
+
     return V_N
 
 def strength_vortex(x_vortex, y_vortex, x_point, y_point, uinf, alpha_v):
@@ -69,6 +79,7 @@ def strength_vortex(x_vortex, y_vortex, x_point, y_point, uinf, alpha_v):
 #    B = uinf_v(uinf, alpha_v)
 #    LU = sp.linalg.lu_factor(A)
 #    x = sp.linalg.lu_solve(LU,B)
+    inv_matrix = np.linalg.inv(matrix_vel(x_vortex, y_vortex, x_point, y_point, uinf, alpha_v))
     vortex_s = np.linalg.solve( matrix_vel(x_vortex, y_vortex, x_point, y_point, uinf, alpha_v), uinf_v(uinf, alpha_v))
 
     
@@ -77,7 +88,7 @@ def strength_vortex(x_vortex, y_vortex, x_point, y_point, uinf, alpha_v):
     return vortex_s
     
 
-#test=strength_vortex([0, 0.13477, 0.501174, 0.855503, 1.0, 0.851604, 0.498826, 0.153123],[0, 0.076589, 0.091737, 0.036484, 0, -0.002197, -0.01396, -0.0028733],[0.032437, 0.305921, 0.693744, 0.946424, 0.944583, 0.688933, 0.311395, 0.043684],[0.038325, 0.09784, 0.06768, 0.014531, -0.000659, -0.006542, -0.022012, -0.023825], 5.0, [0.1837815 \
+#test=strength_vortex([0, 0.13477, 0.501174, 0.855503, 1.0, 0.851604, 0.498826, 0.153123],[0, 0.076589, 0.091737, 0.036484, 0, -0.002197, -0.01396, -0.0028733],[0.032437, 0.305921, 0.693744, 0.946424, 0.944583, 0.688933, 0.311395, 0.043684],[0.038325, 0.09784, 0.06768, 0.014531, -0.000659, -0.006542, -0.022012, -0.023825], 30.0, [0.1837815 \
 #,0.0470395, -0.146872, -0.273212, -0.2722915, -0.1444665, 0.0443025, 0.1781555])
 #print(test) 
 
@@ -93,7 +104,7 @@ def strength_vortex(x_vortex, y_vortex, x_point, y_point, uinf, alpha_v):
 #uinf= 30.0
 #
 #test = strength_vortex(x_vortex, y_vortex, x_point, y_point, uinf, alpha_v)
-
+#print(test)
         
         
         
