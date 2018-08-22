@@ -2,53 +2,49 @@
 --
 --            
 --          (h)-----(g)----------------------(p)-----(o)
---          |    b2  |           b4           |   b7  |
+--          |        |                        |       |
 --          |        |                        |       |      
---          (e)-----(f)----------------------(m)-----(n)
---          |    b1  |      Airfoil NACA      |       |
---          |        |       Here             |   b6  |
---          (d)-----(c)----------------------(l)-----(k)
---          |    b0  |          b3            |       |
---          |        |                        |  b5   |
+--          |   B1   |   Airfoil NACA         |   B3  |
+--          |        |                        |       |
+--         (c)-----(leading edge)  (trailing edge)---(k)
+--          |        |                        |       |
+--          |        |                        |       |
+--          |    B0  |                        |   B2  |
+--          |        |                        |       |
 --          (a)-----(b)----------------------(i)-----(j)
 --        
 --
 -- Authors:  ,Santiago Vera, , ,  Team LL
 -- Date: 21/08/2018
 
-
+--[[
 -- Global settings go first
 axisymmetric = false
 turbulence_model = "S-A" -- other option is: "k-epsilon"
-
+--]]
 
 -- Blocks corners
 -- Block B0
-d = Vector3:new{x=-0.3, y=-0.07}; c = Vector3:new{x=0.0, y=-0.07}
+c = Vector3:new{x=-0.3, y=0}
 a = Vector3:new{x=-0.3, y=-0.17}; b = Vector3:new{x=0.0, y=-0.17}
 
 -- Block B1
-e = Vector3:new{x=-0.3, y=0.07}; f = Vector3:new{x=0.0, y=0.07}
-
--- Block B2
 h = Vector3:new{x=-0.3, y=0.17}; g = Vector3:new{x=0.0, y=0.17}
 
 ----------------------------------------------------------------
 
--- Block B5
-l = Vector3:new{x=1.0, y=-0.07}; k = Vector3:new{x=1.3, y=-0.07}
+-- Block B2
+k = Vector3:new{x=1.3, y=0}
 i = Vector3:new{x=1.0, y=-0.17}; j = Vector3:new{x=1.3, y=-0.17}
 
--- Block B6
-m = Vector3:new{x=1.0, y=0.07}; n = Vector3:new{x=1.3, y=0.07}
 
--- Block B7
+-- Block B3
 p = Vector3:new{x=1.0, y=0.17}; o = Vector3:new{x=1.3, y=0.17}
 
 --NACA4412-------------------------------------------------------------------------------
 --x point of camber--------------------------------------------------------------
 
-naca_pi_points = {}
+naca_pi_points = {} --list of 100 points from 0 to pi
 beta=0
 
 for ib= 0, 99 do
@@ -56,7 +52,7 @@ for ib= 0, 99 do
  beta = beta + math.pi/100
 end 
 
-naca_xc_point = {}
+naca_xc_point = {} -- list of 100 points of the camber x coordinates
 x = 0
 
 for ib=0, 99 do
@@ -66,7 +62,7 @@ end
 
 ---------------------------------------------------------------------------------
 M = 4/100
-P = 40/10
+P = 4/10
 XX = 12/100
 
 yc = {}
@@ -78,7 +74,7 @@ for ib=0, 99 do
   yc[ib]=(M/math.pow(P,2))*(2*P*naca_xc_point[ib]-math.pow(naca_xc_point[ib],2))
   grad_yc[ib]= (2*M/math.pow(P,2))*(P-naca_xc_point[ib])
  elseif naca_xc_point[ib]>=P then
-  yc[ib]=(M/math.pow ((1-P),2))*(1-2*P+2*P*naca_x_point[ib]-math.pow (naca_x_point[ib],2))
+  yc[ib]=(M/math.pow ((1-P),2))*(1-2*P+2*P*naca_xc_point[ib]-math.pow (naca_xc_point[ib],2))
   grad_yc[ib]= (2*M/math.pow((1-P),2))*(P-naca_xc_point[ib])
  else
   error("invalid operation")
@@ -122,85 +118,160 @@ end
 
 --Top
 top_s = {}
-top_egde = {}
+top_edge = {}
 
 for ib= 0, 99 do
  top_s[ib] = Vector3:new{x=naca_xu[ib], y=naca_yu[ib]}
+ top_edge[ib] = Vector3:new{x=naca_xu[ib], y=0.17}
 end
 
 --Bottom
 bottom_s = {}
+bottom_edge = {}
 
+bottom_s[0]=top_s[0]
 for ib= 1, 98 do
  bottom_s[ib] = Vector3:new{x=naca_xl[ib], y=naca_yl[ib]}
+ bottom_edge[ib] = Vector3:new{x=naca_xl[ib], y=-0.17}
 end
+bottom_s[99]=top_s[99]
 
 ---------------------------------------------------------------------------------
 --NACA lines
 
 --Top
+--[[
 top_line = {}
 
 for ib= 0, 98 do
  top_line[ib] = Line:new{p0=top_s[ib], p1=top_s[ib+1]}
 end
+--]]
+
+top_surface = Spline:new{points=top_s}
 
 --Bottom
+--[[
 bottom_line = {}
 
 bottom_line[0]= Line:new{p0=top_s[0], p1=bottom_s[1]}
+
 
 for ib= 1, 97 do
  bottom_line[ib] = Line:new{p0=bottom_s[ib], p1=bottom_s[ib+1]}
 end
 
 bottom_line[98]= Line:new{p0=bottom_s[98], p1=top_s[99]}
+--]]
+
+bottom_surface = Spline:new{points=bottom_s}
+
 
 ---------------------------------------------------------------------------------
-
-
-
+--Egde lines
 
 --[[
---(M/math.pow((1-P),2))*(1-2*P+2*P*naca_x_point[ib]-math.pow(naca_x_point[ib],2))
+ --Top
+top_edge_line = {}
+
+top_edge_line[0] = Line:new{p0=g, p1=top_edge[1]}
+
+for ib= 1, 97 do
+ top_edge_line[ib] = Line:new{p0=top_edge[ib], p1=top_edge[ib+1]}
+end
+
+top_edge_line[98] = Line:new{p0=top_edge[98], p1=p}
+
+--Bottom
+bottom_edge_line = {}
+
+bottom_edge_line[0]= Line:new{p0=b, p1=bottom_edge[1]}
+
+for ib= 1, 97 do
+ bottom_edge_line[ib]= Line:new{p0=bottom_edge[ib], p1=bottom_edge[ib+1]}
+end
+
+bottom_edge_line[98]= Line:new{p0=bottom_edge[98], p1=i}
+--]]
+
+top_edge_line = Line:new{p0=g, p1=p}
+bottom_edge_line = Line:new{p0=b, p1=i}
+---------------------------------------------------------------------------------
+--Top Surface vertical lines
+
+--[[
+top_vertical = {}
+
+top_vertical[0]= Line:new{p0=top_s[0], p1=g}
+
+for ib=1, 98 do
+ top_vertical[ib]= Line:new{p0=top_s[ib], p1=top_edge[ib]}
+end
+
+top_vertical[99]= Line:new{p0=top_s[99], p1=p}
+--]]
+
+top_vertical_left = Line:new{p0=top_s[0], p1=g}
+top_vertical_right = Line:new{p0=top_s[99], p1=p}
+---------------------------------------------------------------------------------
+--Bottom Surface vertical lines
+
+--[[
+bottom_vertical = {}
+
+bottom_vertical[0]= Line:new{p0=b, p1=top_s[0]}
+
+for ib=1, 98 do
+ bottom_vertical[ib]= Line:new{p0=bottom_edge[ib], p1=bottom_s[ib]}
+end
+
+bottom_vertical[99]= Line:new{p0=i, p1=top_s[99]}
+--]]
+
+bottom_vertical_left = Line:new{p0=b, p1=top_s[0]}
+bottom_vertical_right = Line:new{p0=i, p1=top_s[99]}
 ---------------------------------------------------------------------------------
 --Block lines
 --horizontal lines
 ab = Line:new{p0=a, p1=b}
-dc = Line:new{p0=d, p1=c}
-ef = Line:new{p0=e, p1=f}
+
+c_0 = Line:new{p0=c, p1=top_s[0]}
+
 hg = Line:new{p0=h, p1=g}
 
 bi = Line:new{p0=b, p1=i}
-cl = Line:new{p0=c, p1=l}
-fm = Line:new{p0=f, p1=m}
 gp = Line:new{p0=g, p1=p}
 
 ij = Line:new{p0=i, p1=j}
-lk = Line:new{p0=l, p1=k}
-mn = Line:new{p0=m, p1=n}
+
+trail_k = Line:new{p0=top_s[99], p1=k}
+
 po = Line:new{p0=p, p1=o}
 
 --vertical lines
-ad = Line:new{p0=a, p1=d}; bc = Line:new{p0=b, p1=c}
-de = Line:new{p0=d, p1=e}; cf = Line:new{p0=c, p1=f}
-eh = Line:new{p0=e, p1=h}; fg = Line:new{p0=f, p1=g}
+ac = Line:new{p0=a, p1=c}
+b_0 = Line:new{p0=b, p1=top_s[0]}
 
-il = Line:new{p0=i, p1=l}; jk = Line:new{p0=j, p1=k}
-lm = Line:new{p0=l, p1=m}; kn = Line:new{p0=k, p1=n}
-mp = Line:new{p0=m, p1=p}; no = Line:new{p0=n, p1=o}
+ch = Line:new{p0=c, p1=h}
+leading_g = Line:new{p0=top_s[0], p1=g}
 
+i_trailing = Line:new{p0=i, p1=top_s[99]}
+jk = Line:new{p0=j, p1=k}
+
+trailing_p = Line:new{p0=top_s[99], p1=p}
+ko = Line:new{p0=k, p1=o}
+
+
+--[[
 --patches
-b0 = CoonsPatch:new{north=dc ,south=ab ,west=ad ,east=bc}
-b1 = CoonsPatch:new{north=ef ,south=dc ,west=de ,east=cf}
-b2 = CoonsPatch:new{north=hg ,south=ef ,west=eh ,east=fg}
+b0 = CoonsPatch:new{north=c_0 ,south=ab ,west=ac ,east=b_0}
+b1 = CoonsPatch:new{north=hg ,south=c_0 ,west=ch ,east=leading_g}
 
-b3 = CoonsPatch:new{north=cl ,south=bi ,west=bc ,east=il}
-b4 = CoonsPatch:new{north=gp ,south=fm ,west=fg ,east=mp}
+b2 = CoonsPatch:new{north=bottom_surface ,south=bi ,west=b_0 ,east=i_trailing}
+b3 = CoonsPatch:new{north=gp ,south=top_surface ,west=leading_g ,east=trailing_p}
 
-b5 = CoonsPatch:new{north=lk ,south=ij ,west=il ,east=jk}
-b6 = CoonsPatch:new{north=mn ,south=lk ,west=lm ,east=kn}
-b7 = CoonsPatch:new{north=po ,south=mn ,west=mp ,east=no}
+b4 = CoonsPatch:new{north=trail_k ,south=ij ,west=i_trailing ,east=jk}
+b5 = CoonsPatch:new{north=po ,south=trail_k ,west=trailing_p ,east=ko}
 
 --grids
 grid={}
@@ -211,11 +282,10 @@ grid[2] = StructuredGrid:new{psurface=b2, niv=4+1, njv=5+1}
 grid[3] = StructuredGrid:new{psurface=b3, niv=4+1, njv=5+1}
 grid[4] = StructuredGrid:new{psurface=b4, niv=4+1, njv=5+1}
 grid[5] = StructuredGrid:new{psurface=b5, niv=4+1, njv=5+1}
-grid[6] = StructuredGrid:new{psurface=b6, niv=4+1, njv=5+1}
-grid[7] = StructuredGrid:new{psurface=b7, niv=4+1, njv=5+1}
 
 
-for ib= 0, 7 do
+
+for ib= 0, 5 do
 	fileName = string.format("airfoil-NACA4412-blk-%d.vtk",ib)
 	grid[ib]:write_to_vtk_file(fileName)
 end

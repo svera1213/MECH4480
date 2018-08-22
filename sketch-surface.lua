@@ -8,10 +8,54 @@ sk:start{file_name="surface.svg"}
 -- surfaces
 sk:set{line_width=0.5, fill_colour="green"}
 
+--[[
 for ib= 0, 98 do
    sk:render{path=top_line[ib]}
    sk:render{path=bottom_line[ib]}
+   sk:render{path=bottom_edge_line[ib]}
+   sk:render{path=top_edge_line[ib]}
 end
+
+for ib=0, 99 do
+   sk:render{path=top_vertical[ib]}
+   sk:render{path=bottom_vertical[ib]}
+end
+--]]
+
+
+sk:render{path=top_surface}
+sk:render{path=bottom_surface}
+sk:render{path=top_edge_line}
+sk:render{path=bottom_edge_line}
+sk:render{path=top_vertical_left}
+sk:render{path=top_vertical_right}
+sk:render{path=bottom_vertical_left}
+sk:render{path=bottom_vertical_right}
+
+sk:render{path=ab}
+sk:render{path=c_0}
+sk:render{path=hg}
+sk:render{path=ij}
+sk:render{path=trail_k}
+sk:render{path=po}
+
+sk:render{path=ac}
+sk:render{path=b_0}
+sk:render{path=ch}
+sk:render{path=leading_g}
+sk:render{path=i_trailing}
+sk:render{path=jk}
+sk:render{path=trailing_p}
+sk:render{path=ko}
+
+--[[
+sk:render{surf=b0}
+sk:render{surf=b1}
+sk:render{surf=b2}
+sk:render{surf=b3}
+sk:render{surf=b4}
+sk:render{surf=b5}
+--]]
 
 --sk:render{surf=surf_tfi}
 --sk:render{surf=surf_ao}
@@ -49,7 +93,7 @@ end
 
 
 
---for ib= 0, 7 do
+--for ib= 0, 5 do
 --   plot_lines_on_surface(grid[ib])
 --end
 
