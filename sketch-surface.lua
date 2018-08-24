@@ -22,7 +22,13 @@ for ib=0, 99 do
 end
 --]]
 
+sk:render{path=top_front_line}
+sk:render{path=top_back_line}
+sk:render{path=bottom_front_line}
+sk:render{path=bottom_back_line}
 
+
+--[[
 sk:render{path=top_surface}
 sk:render{path=bottom_surface}
 sk:render{path=top_edge_line}
@@ -48,7 +54,7 @@ sk:render{path=jk}
 sk:render{path=trailing_p}
 sk:render{path=ko}
 
---[[
+
 sk:render{surf=b0}
 sk:render{surf=b1}
 sk:render{surf=b2}
@@ -96,8 +102,15 @@ end
 --for ib= 0, 5 do
 --   plot_lines_on_surface(grid[ib])
 --end
+--[[
+plot_lines_on_surface(b0)
+plot_lines_on_surface(b1)
+plot_lines_on_surface(b2)
+plot_lines_on_surface(b3)
+plot_lines_on_surface(b4)
+plot_lines_on_surface(b5)
+--]]
 
---plot_lines_on_surface(surf_tfi)
 --plot_lines_on_surface(surf_ao)
 
 -- labelled points of interest

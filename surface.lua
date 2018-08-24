@@ -4,7 +4,7 @@
 --          (h)-----(g)----------------------(p)-----(o)
 --          |        |                        |       |
 --          |        |                        |       |      
---          |   B1   |   Airfoil NACA         |   B3  |
+--          |   B1   |     Airfoil NACA       |   B3  |
 --          |        |                        |       |
 --         (c)-----(leading edge)  (trailing edge)---(k)
 --          |        |                        |       |
@@ -17,11 +17,28 @@
 -- Authors:  ,Santiago Vera, , ,  Team LL
 -- Date: 21/08/2018
 
+--################################################################################
+--FUNCTIONS
+-------------------------------
+--Returns length of a table 
+function len(table_s)
+ local counter = 0
+ for index in pairs(table_s) do
+  counter = counter +1
+ end
+ return counter
+end
+-------------------------------
+
+--################################################################################
+
 --[[
 -- Global settings go first
 axisymmetric = false
 turbulence_model = "S-A" -- other option is: "k-epsilon"
 --]]
+
+
 
 -- Blocks corners
 -- Block B0
@@ -116,117 +133,126 @@ end
 ---------------------------------------------------------------------------------
 --NACA vertices
 
---Top
+--Top----------------------------------------------------------------------------
+
 top_s = {}
 top_edge = {}
 
+--Top Airfoil divided in two parts
+top_front ={}
+top_back = {}
+----------------------------------
+--print("ib	","X     	","Y	      ","point")
 for ib= 0, 99 do
- top_s[ib] = Vector3:new{x=naca_xu[ib], y=naca_yu[ib]}
- top_edge[ib] = Vector3:new{x=naca_xu[ib], y=0.17}
+
+ if naca_xu[ib] < 0.3 and naca_xu[ib] >= 0 then 
+  --top_front[ib]= Vector3:new{x=naca_xu[ib], y=naca_yu[ib]}
+  table.insert(top_front,Vector3:new{x=naca_xu[ib], y=naca_yu[ib]})
+  --print(ib,naca_xu[ib],naca_yu[ib],"front = ", top_front[ib])
+ elseif naca_xu[ib] >= 0.3 then
+  --top_back[ib]= Vector3:new{x=naca_xu[ib], y=naca_yu[ib]}
+  table.insert(top_back,Vector3:new{x=naca_xu[ib], y=naca_yu[ib]})
+  --print(ib,naca_xu[ib],naca_yu[ib],"back = ", top_back[ib])
+ end
+
+-- top_s[ib] = Vector3:new{x=naca_xu[ib], y=naca_yu[ib]}
+-- top_edge[ib] = Vector3:new{x=naca_xu[ib], y=0.17}
 end
 
---Bottom
+
+
+
+table.insert(top_front,top_back[1])
+
+
+
+--Bottom----------------------------------------------------------------------------
 bottom_s = {}
 bottom_edge = {}
 
+--Bottom Airfoil divided in two parts
+bottom_front ={}
+bottom_back ={}
+b_f={}
+-------------------------------------
+
 bottom_s[0]=top_s[0]
+
+table.insert(b_f,top_front[1])
+
 for ib= 1, 98 do
+
+ if naca_xl[ib] < 0.3 then 
+  --b_f[ib]= Vector3:new{x=naca_xl[ib], y=naca_yl[ib]}
+  table.insert(b_f,Vector3:new{x=naca_xl[ib], y=naca_yl[ib]})
+ elseif naca_xl[ib] >= 0.3 then
+  --bottom_back[ib]= Vector3:new{x=naca_xl[ib], y=naca_yl[ib]}
+  table.insert(bottom_back,Vector3:new{x=naca_xl[ib], y=naca_yl[ib]})
+ end
+
  bottom_s[ib] = Vector3:new{x=naca_xl[ib], y=naca_yl[ib]}
  bottom_edge[ib] = Vector3:new{x=naca_xl[ib], y=-0.17}
 end
+
 bottom_s[99]=top_s[99]
+
+table.insert(b_f,bottom_back[0])
+
+table.insert(bottom_back,top_back[len(top_back)])
+
+
+
+--------------------------------------------------------------------------------
+--Reverse b_f table in bottom_front
+N= len(b_f)
+for ib=0, N do 
+ --bottom_front[ib] = b_f[N-ib]
+  table.insert(bottom_front,b_f[N-ib])
+end
 
 ---------------------------------------------------------------------------------
 --NACA lines
 
 --Top
---[[
-top_line = {}
 
-for ib= 0, 98 do
- top_line[ib] = Line:new{p0=top_s[ib], p1=top_s[ib+1]}
-end
---]]
+--top_surface = Spline:new{points=top_s}
 
-top_surface = Spline:new{points=top_s}
+--Top Front----------------------------------
+top_front_line = Spline:new{points=top_front}
+
+--Top Back 
+top_back_line = Spline:new{points=top_back}
+---------------------------------------------
 
 --Bottom
+
+--bottom_surface = Spline:new{points=bottom_s}
+
+--Bottom Front--------------------------------------
+bottom_front_line = Spline:new{points=bottom_front}
+
+--Bottom Back
+bottom_back_line = Spline:new{points=bottom_back}
+----------------------------------------------------
+
 --[[
-bottom_line = {}
-
-bottom_line[0]= Line:new{p0=top_s[0], p1=bottom_s[1]}
-
-
-for ib= 1, 97 do
- bottom_line[ib] = Line:new{p0=bottom_s[ib], p1=bottom_s[ib+1]}
-end
-
-bottom_line[98]= Line:new{p0=bottom_s[98], p1=top_s[99]}
---]]
-
-bottom_surface = Spline:new{points=bottom_s}
-
-
 ---------------------------------------------------------------------------------
 --Egde lines
 
---[[
- --Top
-top_edge_line = {}
-
-top_edge_line[0] = Line:new{p0=g, p1=top_edge[1]}
-
-for ib= 1, 97 do
- top_edge_line[ib] = Line:new{p0=top_edge[ib], p1=top_edge[ib+1]}
-end
-
-top_edge_line[98] = Line:new{p0=top_edge[98], p1=p}
-
---Bottom
-bottom_edge_line = {}
-
-bottom_edge_line[0]= Line:new{p0=b, p1=bottom_edge[1]}
-
-for ib= 1, 97 do
- bottom_edge_line[ib]= Line:new{p0=bottom_edge[ib], p1=bottom_edge[ib+1]}
-end
-
-bottom_edge_line[98]= Line:new{p0=bottom_edge[98], p1=i}
---]]
 
 top_edge_line = Line:new{p0=g, p1=p}
 bottom_edge_line = Line:new{p0=b, p1=i}
 ---------------------------------------------------------------------------------
 --Top Surface vertical lines
 
---[[
-top_vertical = {}
 
-top_vertical[0]= Line:new{p0=top_s[0], p1=g}
-
-for ib=1, 98 do
- top_vertical[ib]= Line:new{p0=top_s[ib], p1=top_edge[ib]}
-end
-
-top_vertical[99]= Line:new{p0=top_s[99], p1=p}
---]]
 
 top_vertical_left = Line:new{p0=top_s[0], p1=g}
 top_vertical_right = Line:new{p0=top_s[99], p1=p}
 ---------------------------------------------------------------------------------
 --Bottom Surface vertical lines
 
---[[
-bottom_vertical = {}
 
-bottom_vertical[0]= Line:new{p0=b, p1=top_s[0]}
-
-for ib=1, 98 do
- bottom_vertical[ib]= Line:new{p0=bottom_edge[ib], p1=bottom_s[ib]}
-end
-
-bottom_vertical[99]= Line:new{p0=i, p1=top_s[99]}
---]]
 
 bottom_vertical_left = Line:new{p0=b, p1=top_s[0]}
 bottom_vertical_right = Line:new{p0=i, p1=top_s[99]}
@@ -262,7 +288,7 @@ trailing_p = Line:new{p0=top_s[99], p1=p}
 ko = Line:new{p0=k, p1=o}
 
 
---[[
+
 --patches
 b0 = CoonsPatch:new{north=c_0 ,south=ab ,west=ac ,east=b_0}
 b1 = CoonsPatch:new{north=hg ,south=c_0 ,west=ch ,east=leading_g}
@@ -273,15 +299,20 @@ b3 = CoonsPatch:new{north=gp ,south=top_surface ,west=leading_g ,east=trailing_p
 b4 = CoonsPatch:new{north=trail_k ,south=ij ,west=i_trailing ,east=jk}
 b5 = CoonsPatch:new{north=po ,south=trail_k ,west=trailing_p ,east=ko}
 
+
+rcfL = RobertsFunction:new{end0 = false, end1 = true, beta=1.02}
+
 --grids
 grid={}
 
-grid[0] = StructuredGrid:new{psurface=b0, niv=4+1, njv=5+1}
-grid[1] = StructuredGrid:new{psurface=b1, niv=4+1, njv=5+1}
-grid[2] = StructuredGrid:new{psurface=b2, niv=4+1, njv=5+1}
-grid[3] = StructuredGrid:new{psurface=b3, niv=4+1, njv=5+1}
-grid[4] = StructuredGrid:new{psurface=b4, niv=4+1, njv=5+1}
-grid[5] = StructuredGrid:new{psurface=b5, niv=4+1, njv=5+1}
+grid[0] = StructuredGrid:new{psurface=b0, niv=10+1, njv=5+1, cfList ={west=rcfL, east=rcfL}}
+grid[1] = StructuredGrid:new{psurface=b1, niv=10+1, njv=5+1, cfList ={west=rcfL, east=rcfL}}
+
+grid[2] = StructuredGrid:new{psurface=b2, niv=10+1, njv=5+1, cfList ={west=rcfL, east=rcfL}}
+grid[3] = StructuredGrid:new{psurface=b3, niv=10+1, njv=5+1, cfList ={west=rcfL, east=rcfL}}
+
+grid[4] = StructuredGrid:new{psurface=b4, niv=10+1, njv=5+1, cfList ={west=rcfL, east=rcfL}}
+grid[5] = StructuredGrid:new{psurface=b5, niv=10+1, njv=5+1, cfList ={west=rcfL, east=rcfL}}
 
 
 
@@ -292,8 +323,9 @@ end
 --]]
 
 
---defined blocks
 --[[
+--defined blocks
+
 blk = {}
 	
 blk[0] = FoamBlock:new{grid=grid[0], bndry_labels={west="w-01", south="w-01", east="w-01"}}
